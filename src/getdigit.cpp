@@ -20,3 +20,9 @@ boost::uint8_t mdl::getdigit(uint_t __uint, std::size_t __unit) {
 
     return digit[__unit];
 }
+
+extern "C" {
+    boost::uint8_t getdigit(mdl::uint_t __uint, std::size_t __unit) {
+        return mdl::getdigit(__uint, __unit);
+    }
+}
