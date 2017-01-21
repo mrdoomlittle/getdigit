@@ -5,5 +5,5 @@
 pub type uint_t = u32;
 
 extern "C" {
-	pub fn getdigit(__uint: uint_t, __unit: usize) -> u8;
+    pub fn getdigit(__uint: uint_t, __unit: usize) -> u8;
 }
