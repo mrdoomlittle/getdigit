@@ -2,6 +2,7 @@
 # define __getdigit__hpp
 # include <intlen.hpp>
 # include <mdlint.h>
+# include <cstdlib>
 # include <cmath>
 namespace mdl
 {
