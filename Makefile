@@ -26,6 +26,7 @@ ARC64:
 ARC32:
 	make build ARC=-DARC32 R_ARC=ARC32 CFG=--cfg RUST_LIBS=$(RUST_LIBS)\
 	INTLEN_INC=$(INTLEN_INC) INTLEN_LIB=$(INTLEN_LIB) EINT_T_INC=$(EINT_T_INC)
+
 build: src/getdigit.o src/libgetdigit.a
 	cp src/getdigit.hpp inc
 	cp src/libgetdigit.a lib
