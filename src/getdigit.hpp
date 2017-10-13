@@ -1,12 +1,9 @@
 # ifndef __getdigit__hpp
 # define __getdigit__hpp
-# include <intlen.hpp>
 # include <mdlint.h>
-# include <cstdlib>
-# include <cmath>
 namespace mdl
 {
-    mdl::u8_t getdigit(uint_t __uint, std::size_t __unit);
+    mdl::u8_t getdigit(uint_t __no, std::size_t __off);
 }
 
 # endif /*__getdigit__hpp*/
