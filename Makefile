@@ -1,55 +1,59 @@
 SHELL :=/bin/bash
-DEF_INSTALL=/usr/local
-INSTALL_DIR=$(DEF_INSTALL)
+def_install_dir=/usr/local
+ifndef install_dir
+ install_dir=$(def_install_dir)
+endif
 
-NO_BINARY=false
-INC_DIR_NAME=include
+no_binary=false
+ifndef intlen_inc_dir
+ intlen_inc_dir=$(def_install_dir)/include
+endif
 
-INTLEN_INC=$(DEF_INSTALL)/$(INC_DIR_NAME)
-INTLEN_LIB=$(DEF_INSTALL)/lib
-MDLINT_INC=$(DEF_INSTALL)/$(INC_DIR_NAME)
+ifndef intlen_lib_dir
+ intlen_lib_dir=$(def_install_dir)/lib
+endif
 
-INC=-Iinc -I$(INTLEN_INC) -I$(MDLINT_INC)
-LIB=-Llib -L$(INTLEN_LIB)
-LL=-lmdl-getdigit -lmdl-intlen
+ifndef mdlint_inc_dir
+ mdlint_inc_dir=$(def_install_dir)/include
+endif
 
-ARC=ARC32
-R_ARC=
-CFG=
-RUST_LIBS=false
+inc_flags=-Iinc -I$(intlen_inc_dir) -I$(mdlint_inc_dir)
+lib_flags=-Llib -L$(intlen_lib_dir)
+ld_flags=-lmdl-getdigit -lmdl-intlen
 
+ifndef arc
+ arc=ARC32
+endif
+
+build_rust_lib=false
 all: build
-
-ARC64:
-	make build ARC=ARC64 R_ARC=ARC64 CFG=--cfg RUST_LIBS=$(RUST_LIBS)\
-	INTLEN_INC=$(INTLEN_INC) INTLEN_LIB=$(INTLEN_LIB) MDLINT_INC=$(MDLINT_INC)
-ARC32:
-	make build ARC=ARC32 R_ARC=ARC32 CFG=--cfg RUST_LIBS=$(RUST_LIBS)\
-	INTLEN_INC=$(INTLEN_INC) INTLEN_LIB=$(INTLEN_LIB) MDLINT_INC=$(MDLINT_INC)
+arc64:
+	make build arc=ARC64 build_rust_lib=$(build_rust_lib)\
+	intlen_inc_dir=$(inclen_inc_dir) intlen_lib_dir=$(intlen_lib_dir) mdlint_inc_dir=$(mdlint_inc_dir)
+arc32:
+	make build arc=ARC32 build_rust_lib=$(build_rust_lib)\
+	intlen_inc_dir=$(inclen_inc_dir) intlen_lib_dir=$(intlen_lib_dir) mdlint_inc_dir=$(mdlint_inc_dir)
 
 build: src/getdigit.o libmdl-getdigit.a
 	cp src/getdigit.hpp inc/mdl
-	cp libmdl-getdigit.a lib
-
-	if [ $(RUST_LIBS) = true ]; then\
-		make rust-libs R_ARC=$(R_ARC) CFG=$(CFG);\
-		cp libmdl-getdigit.rlib rlib;\
+	if [ $(build_rust_lib) = true ]; then\
+		make rust-libs arc=$(arc);\
 		rustc -Llib -Lrlib -o bin/getdigit.rust getdigit.rs -lmdl-getdigit;\
 	fi;
 
-	if [ $(NO_BINARY) = false ]; then\
-		g++ -Wall -std=c++11 $(INC) $(LIB) -D__$(ARC) -o bin/getdigit getdigit.cpp $(LL);\
+	if [ $(no_binary) = false ]; then\
+		g++ -Wall -std=c++11 $(inc_flags) $(lib_flags) -D__$(arc) -o bin/getdigit getdigit.cpp $(ld_flags);\
 	fi;
 rust-libs: src/libgetdigit.rlib
 
 libmdl-getdigit.a: src/getdigit.o
-	ar rcs libmdl-getdigit.a src/getdigit.o
+	ar rcs lib/libmdl-getdigit.a src/getdigit.o
 
 src/getdigit.o: src/getdigit.cpp
-	g++ -c -Wall -fPIC -std=c++11 $(INC) -D__$(ARC) -o src/getdigit.o src/getdigit.cpp
+	g++ -c -Wall -fPIC -std=c++11 $(inc_flags) -D__$(arc) -o src/getdigit.o src/getdigit.cpp
 
 src/libgetdigit.rlib: src/getdigit.rs
-	rustc -L/usr/local/lib $(CFG) $(R_ARC) --crate-type=lib -o libmdl-getdigit.rlib src/getdigit.rs -lmdl-intlen -lstdc++
+	rustc -L/usr/local/lib --cfg $(arc) --crate-type=lib -o rlib/libmdl-getdigit.rlib src/getdigit.rs -lmdl-intlen -lstdc++
 
 clean:
 	rm -f bin/*
@@ -57,25 +61,26 @@ clean:
 	rm -f rlib/*.rlib
 	rm -f inc/mdl/*.hpp
 	rm -f src/*.o
-	rm -f src/*.a
-	rm -f src/*.rlib
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	mkdir -p $(INSTALL_DIR)/lib
-	mkdir -p $(INSTALL_DIR)/rlib
-	mkdir -p $(INSTALL_DIR)/$(INC_NAME)
+	mkdir -p $(install_dir)/bin
+	mkdir -p $(install_dir)/lib
+	mkdir -p $(install_dir)/rlib
+	mkdir -p $(install_dir)/include
 
-	cp bin/getdigit $(INSTALL_DIR)/bin
-	cp lib/libmdl-getdigit.a $(INSTALL_DIR)/lib
-
-	if [ -f rlib/libgetdigit.rlib ]; then \
-		cp rlib/libgetdigit.rlib $(INSTALL_DIR)/rlib/libgetdigit.rlib;\
+	if [ -f bin/getdigit ]; then \
+		cp bin/getdigit $(install_dir)/bin; \
 	fi;
 
-	mkdir -p $(INSTALL_DIR)/$(INC_NAME)/mdl
-	cp inc/mdl/getdigit.hpp $(INSTALL_DIR)/$(INC_NAME)/mdl/getdigit.hpp
+	cp lib/libmdl-getdigit.a $(install_dir)/lib
+
+	if [ -f rlib/libgetdigit.rlib ]; then \
+		cp rlib/libgetdigit.rlib $(install_dir)/rlib/libgetdigit.rlib;\
+	fi;
+
+	mkdir -p $(install_dir)/include/mdl
+	cp inc/mdl/getdigit.hpp $(install_dir)/include/mdl/getdigit.hpp
 uninstall:
-	rm -f $(INSTALL_DIR)/bin/getdigit
-	rm -f $(INSTALL_DIR)/lib/libmdl-getdigit.a
-	rm -f $(INSTALL_DIR)/rlib/libmdl-getdigit.rlib
-	rm -rf $(INSTALL_DIR)/$(INC_NAME)/mdl
+	rm -f $(install_dir)/bin/getdigit
+	rm -f $(install_dir)/lib/libmdl-getdigit.a
+	rm -f $(install_dir)/rlib/libmdl-getdigit.rlib
+	rm -rf $(install_dir)/include/mdl
